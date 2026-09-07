@@ -285,11 +285,11 @@ public class MainActivity extends GameActivity implements View.OnKeyListener, Fi
 
     native void nativeShutdown();
 
-    native void nativeStopThis();
+    protected native void nativeStopThis();
 
     native void nativeStoragePermissionRequestResult(boolean result, int reason);
 
-    native void nativeSuspend();
+    protected native void nativeSuspend();
 
     native void nativeSuspendGameplayUpdates(boolean z);
 
