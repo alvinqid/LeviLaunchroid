@@ -190,6 +190,7 @@ public class MinecraftLauncher {
         launchIntent.putExtra("MINECRAFT_VERSION_DIR", version.directoryName);
         launchIntent.putExtra("LAUNCH_VERTICALLY", version.launchVertically);
         launchIntent.putExtra("VERSION_ISOLATION", version.versionIsolation);
+//        launchIntent.putExtra("ENABLE_FOREGROUNDSERVICE", version.enableFgs);
         launchIntent.removeExtra("LAUNCH_WITH_URI");
 
         activity.startActivity(launchIntent);

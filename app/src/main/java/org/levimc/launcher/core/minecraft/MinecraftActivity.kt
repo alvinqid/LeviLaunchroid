@@ -41,6 +41,8 @@ class MinecraftActivity : MainActivity(), PojavControlsHost {
     private var normalExitPrepared = false
     private var normalExitRestartScheduled = false
     private var gameRuntimeStarted = false
+    private var enableFgs = true
+    private var keepGameRunningInBackground = false
     private var preloaderTextInput: PreloaderTextInput? = null
     private var previousInputFocus: View? = null
 
@@ -132,7 +134,9 @@ class MinecraftActivity : MainActivity(), PojavControlsHost {
         if (launchVertically) {
             requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
-        
+
+//        enableFgs = intent.getBooleanExtra("ENABLE_FOREGROUNDSERVICE", false)
+
         initializePreloaderTextInput()
         PreloaderInput.setActivity(this)
         MinecraftActivityState.onCreated(this)
@@ -253,6 +257,8 @@ class MinecraftActivity : MainActivity(), PojavControlsHost {
 
     override fun onResume() {
         super.onResume()
+        keepGameRunningInBackground = false
+        ForegroundService.stop(this)
         if (!isFinishing) {
             normalExitPrepared = false
             normalExitRestartScheduled = false
@@ -416,6 +422,9 @@ class MinecraftActivity : MainActivity(), PojavControlsHost {
     }
 
     override fun onPause() {
+        val keep = shouldKeepGameInBackground()
+        keepGameRunningInBackground = keep
+        if (keep) ForegroundService.start(this) else nativeSuspend()
         val shouldRestartAfterNormalExit = shouldRestartAfterNormalExit()
         if (shouldRestartAfterNormalExit) {
             PreloaderInput.cancelDocumentRequest("Minecraft closed")
@@ -428,6 +437,8 @@ class MinecraftActivity : MainActivity(), PojavControlsHost {
     }
 
     override fun onDestroy() {
+        keepGameRunningInBackground = false
+        ForegroundService.stop(this)
         PreloaderInput.cancelDocumentRequest("Minecraft closed")
         ModManager.disableAndUnloadLoadedMods()
         val shouldPrepareNormalExit = shouldRestartAfterNormalExit()
@@ -449,6 +460,11 @@ class MinecraftActivity : MainActivity(), PojavControlsHost {
                 scheduleNormalExitProcessRestart()
             }
         }
+    }
+
+    override fun onStop() {
+        if (!keepGameRunningInBackground) nativeStopThis()
+        super.onStop()
     }
 
     private fun shouldRestartAfterNormalExit(): Boolean {
@@ -528,6 +544,9 @@ class MinecraftActivity : MainActivity(), PojavControlsHost {
     override fun getCacheDir(): File {
         return resolveStorageDir(MinecraftLauncher.EXTRA_STORAGE_CACHE_DIR, super.getCacheDir())
     }
+
+    fun shouldKeepGameInBackground(): Boolean =
+        enableFgs || !isFinishing || !isChangingConfigurations
 
     private fun initializePreloaderTextInput() {
         val input = PreloaderTextInput(this).apply {
