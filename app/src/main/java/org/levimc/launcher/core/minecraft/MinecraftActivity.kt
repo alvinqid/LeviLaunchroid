@@ -258,7 +258,7 @@ class MinecraftActivity : MainActivity(), PojavControlsHost {
     override fun onResume() {
         super.onResume()
         keepGameRunningInBackground = false
-        ForegroundService.stop(this)
+        ForegroundService.stopForegroundService(this)
         if (!isFinishing) {
             normalExitPrepared = false
             normalExitRestartScheduled = false
@@ -424,7 +424,7 @@ class MinecraftActivity : MainActivity(), PojavControlsHost {
     override fun onPause() {
         val keep = shouldKeepGameInBackground()
         keepGameRunningInBackground = keep
-        if (keep) ForegroundService.start(this) else nativeSuspend()
+        if (keep) ForegroundService.runMinecraftInBackground(this) else nativeSuspend()
         val shouldRestartAfterNormalExit = shouldRestartAfterNormalExit()
         if (shouldRestartAfterNormalExit) {
             PreloaderInput.cancelDocumentRequest("Minecraft closed")
@@ -438,7 +438,7 @@ class MinecraftActivity : MainActivity(), PojavControlsHost {
 
     override fun onDestroy() {
         keepGameRunningInBackground = false
-        ForegroundService.stop(this)
+        ForegroundService.stopForegroundService(this)
         PreloaderInput.cancelDocumentRequest("Minecraft closed")
         ModManager.disableAndUnloadLoadedMods()
         val shouldPrepareNormalExit = shouldRestartAfterNormalExit()
